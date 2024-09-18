@@ -153,17 +153,11 @@ float UV() {
 void loop() {
   gyro();
   float uvIntensity = UV();
-  // Serial.println();
-  // float BPM = getHeartRate();
-  // char *bpmData = (char *)malloc(100);
-  // sprintf(bpmData, "{\"type\":\"BPM\",\"data\":{\"BPM\":%f}}", BPM);
-  // wsServer.sendMsg(bpmData);
 
   float temperature = particleSensor.readTemperature();
-  char *temperatureData = (char *)malloc(60);                                            // Allocate memory for the message
-  if (temperatureData != NULL) {                                                                        // Ensure memory allocation was successful
-    sprintf(temperatureData, "{\"t\":\"tmp\",\"dt\":{\"T\":%f, \"U\":%f}}", temperature, uvIntensity);  // Format the message
-
+  char *temperatureData = (char *)malloc(60);                                           
+  if (temperatureData != NULL) {                                                                       
+    sprintf(temperatureData, "{\"t\":\"tmp\",\"dt\":{\"T\":%f, \"U\":%f}}", temperature, uvIntensity); 
     wsServer.sendMsg(temperatureData);  // Send the message
 
     free(temperatureData);  // Free the allocated memory after the message is sent

@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+
+.main-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #DDE6ED;
+    /* border: 2px solid red; */
+    font-family: 'Poppins', sans-serif;
+    color: #000;
+    gap: 20px;
+    font-size: 18px;
+}
+
+h1 {
+    font-size: 30px;
+    color: #6d0202;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+    text-decoration: underline;
+}
+
+.data {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-wrap: wrap;
+    /* border: 2px solid green; */
+    padding: 10px;
+    gap: 20px;
+}
+
+.each-element {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    /* border: 2px solid blue; */
+    padding: 10px;
+    /* background-color:rgba(126, 147, 157, 0.689); */
+    background-color: #ffffffac;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    width: 200px;
+    border-radius: 10px;
+    height: 200px;
+}
+
+.icon {
+    font-size: 50px;
+    color: #6d0202;
+}
+
+.each-element:hover {
+    scale: 1.05;
+    background-color: #5291b029;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+}
+
+h2{
+    font-size: 21px;
+
+}

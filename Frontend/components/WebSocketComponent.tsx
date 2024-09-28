@@ -1,12 +1,14 @@
 "use client";
 import {
   faHeart,
-  faTemperatureThreeQuarters,
   faPersonWalking,
   faSun,
+  faTemperatureThreeQuarters,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import "./Page.css";
 
@@ -20,20 +22,20 @@ const WebSocketComponent: React.FC = () => {
   const [beatsPerMinute, setBeatsPerMinute] = useState<number>(0); // Set to 0 when no hand is detected
   const [beatAvg, setBeatAvg] = useState<number>(0); // Set to 0 when no hand is detected
   const [uv, setUV] = useState<number>(0);
+  const [calories, setCalories] = useState<number>(0);
 
-  const RATE_SIZE = 4; // Number of heart rates to average
-  const MINIMUM_DELTA = 300; // Minimum time between two beats (in milliseconds)
-  const MAXIMUM_DELTA = 1500; // Maximum time between two beats (in milliseconds)
+  const RATE_SIZE = 4;
+  const MINIMUM_DELTA = 300;
+  const MAXIMUM_DELTA = 1500;
 
-  // UseRef for mutable variables that don't cause re-renders
   const rates = useRef<number[]>(new Array(RATE_SIZE).fill(0));
   const rateSpot = useRef<number>(0);
-  const lastBeat = useRef<number>(0); // Keep track of the time of the last valid beat
+  const lastBeat = useRef<number>(0);
 
-  const handDetected = useRef<boolean>(false); // Track hand detection status
+  const handDetected = useRef<boolean>(false);
 
   useEffect(() => {
-    const websocket = new WebSocket("ws://192.168.7.97/ws");
+    const websocket = new WebSocket("ws://192.168.182.97/ws");
 
     websocket.onopen = () => {
       console.log("Connected to WebSocket server");
@@ -67,12 +69,14 @@ const WebSocketComponent: React.FC = () => {
         }
 
         if (data.t === "tmp") {
-          setTemp(data.dt.T);
+          const tempF = (data.dt.T * 9) / 5 + 32;
+          setTemp(tempF);
           setUV(data.dt.U);
         }
 
         if (data.t === "s") {
           setStepCount(data.dt.s);
+          // calculateCalories();
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", event.data, error);
@@ -93,6 +97,15 @@ const WebSocketComponent: React.FC = () => {
       websocket.close();
     };
   }, []);
+
+  useEffect(() => {
+    calculateCalories();
+    if (beatsPerMinute > 120) {
+      notify();
+    } else {
+      toast.dismiss();
+    }
+  }, [stepCount, beatsPerMinute]);
 
   const processHeartRate = (irValue: number) => {
     const currentTime = new Date().getTime();
@@ -132,18 +145,35 @@ const WebSocketComponent: React.FC = () => {
     lastBeat.current = 0; // Reset lastBeat to be ready for next hand placement
   };
 
+  const calculateCalories = () => {
+    const weight = 70; // Weight in kg
+    const Stride_Length = 0.73; // Stride length in meters
+    const WtPound = weight * 2.20462;
+
+    const Calories_Burned =
+      stepCount * (Stride_Length * 0.000473) * (WtPound / 100);
+    console.log(Calories_Burned);
+
+    return setCalories(Calories_Burned);
+  };
+
+  const notify = () => {
+    toast.error("Heart rate is too high", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  };
+
   return (
     <div className="main-div">
-      <h1>Result Monitor Dashboard</h1>
+      <ToastContainer />
+      <h1>Health Monitor Dashboard</h1>
       <div className="data">
-        {/* <p>Red: {red}</p>
-        <p>IR: {ir}</p>
-        <p>Green: {green}</p>
-        <p>Temperature: {temp}°C</p>
-        <p>UV Index: {uv}</p>
-        <p>Step count: {stepCount}</p>
-        <p>Beats per minute: {beatsPerMinute}</p>
-        <p>Average BPM: {beatAvg}</p> */}
         <div className="each-element">
           <FontAwesomeIcon icon={faHeart} fade className="icon" />
           <p>BPM: {beatsPerMinute.toFixed(2)}</p>
@@ -154,7 +184,7 @@ const WebSocketComponent: React.FC = () => {
             fade
             className="icon"
           />
-          <p>TEMP: {temp.toFixed(2)}°C </p>
+          <p>TEMP: {temp.toFixed(2)}°F </p>
         </div>
         <div className="each-element">
           <FontAwesomeIcon icon={faPersonWalking} fade className="icon" />
@@ -165,7 +195,10 @@ const WebSocketComponent: React.FC = () => {
           <p>UV Index: {uv.toFixed(2)}</p>
         </div>
       </div>
-      <h2>Average BPM: {beatAvg.toFixed(2)}</h2>
+      <div>
+        <h2>Average BPM: {beatAvg.toFixed(2)}</h2>
+        <h2>Burned Caloried: {calories.toFixed(3)}cal</h2>
+      </div>
     </div>
   );
 };

@@ -6,14 +6,25 @@
 WebSocketServer wsServer(80, "/ws");
 
 MAX30105 particleSensor;
+
+//ADXL sensor pin setup
 #define xpin 34  
 #define ypin 35  
 #define zpin 32  
 
-#define UVOUT 33   
-#define REF_3V3 36 
+
+// UV sensor pin setup
+#define UVOUT 33   //amr eikhane G23
+#define REF_3V3 36  //amr eikhane SP
 #define EN_PIN 25
 
+/*
+MAX30105 sensor pin setup
+SDA: 21
+SCL: 22
+Vin: 3v3
+GND: GND
+*/
 
 // Heart rate things
 const byte RATE_SIZE = 4;

@@ -19,10 +19,11 @@ const WebSocketComponent: React.FC = () => {
   const [green, setGreen] = useState<number>(0);
   const [temp, setTemp] = useState<number>(0);
   const [stepCount, setStepCount] = useState<number>(0);
-  const [beatsPerMinute, setBeatsPerMinute] = useState<number>(0); // Set to 0 when no hand is detected
-  const [beatAvg, setBeatAvg] = useState<number>(0); // Set to 0 when no hand is detected
+  const [beatsPerMinute, setBeatsPerMinute] = useState<number>(0);
+  const [beatAvg, setBeatAvg] = useState<number>(0);
   const [uv, setUV] = useState<number>(0);
   const [calories, setCalories] = useState<number>(0);
+  const [spo2, setSpo2] = useState<number>(0); // New state for SpO2
 
   const RATE_SIZE = 4;
   const MINIMUM_DELTA = 300;
@@ -33,6 +34,12 @@ const WebSocketComponent: React.FC = () => {
   const lastBeat = useRef<number>(0);
 
   const handDetected = useRef<boolean>(false);
+  const statRed = useRef(new MinMaxAvgStatistic());
+  const statIR = useRef(new MinMaxAvgStatistic());
+  const lastDiff = useRef<number>(NaN);
+  const crossed = useRef<boolean>(false);
+  const lastHeartbeat = useRef<number>(0);
+  const crossedTime = useRef<number>(0);
 
   useEffect(() => {
     const websocket = new WebSocket("ws://192.168.182.97/ws");
@@ -52,18 +59,17 @@ const WebSocketComponent: React.FC = () => {
           setGreen(data.dt.g);
 
           if (data.dt.ir > 50000) {
-            // Hand is placed over the sensor, process heart rate
             if (!handDetected.current) {
-              // Reset lastBeat to enable re-detection
               lastBeat.current = 0;
               handDetected.current = true;
             }
             processHeartRate(data.dt.ir);
+            calculateSpO2(data.dt.r, data.dt.ir); // Call the SpO2 calculation
           } else {
-            // Hand removed from the sensor, reset heart rate
             if (handDetected.current) {
               resetHeartRate();
               handDetected.current = false;
+              resetSpO2(); // Reset SpO2 values when hand is removed
             }
           }
         }
@@ -76,7 +82,6 @@ const WebSocketComponent: React.FC = () => {
 
         if (data.t === "s") {
           setStepCount(data.dt.s);
-          // calculateCalories();
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", event.data, error);
@@ -105,6 +110,8 @@ const WebSocketComponent: React.FC = () => {
     } else {
       toast.dismiss();
     }
+    console.log("BPM: ", beatsPerMinute);
+    console.log("SpO2: ", spo2);
   }, [stepCount, beatsPerMinute]);
 
   const processHeartRate = (irValue: number) => {
@@ -145,6 +152,40 @@ const WebSocketComponent: React.FC = () => {
     lastBeat.current = 0; // Reset lastBeat to be ready for next hand placement
   };
 
+  const calculateSpO2 = (redValue: number, irValue: number) => {
+    // Process the current red and IR values
+    statRed.current.process(redValue);
+    statIR.current.process(irValue);
+
+    // Calculate AC components
+    const redAC = statRed.current.maximum() - statRed.current.minimum();
+    const irAC = statIR.current.maximum() - statIR.current.minimum();
+
+    // Calculate the ratio of the AC components
+    const ratio = redAC / irAC;
+
+    // Constants for SpO2 calculation (these values are typically derived empirically)
+    const kSpO2_A = -45.06;
+    const kSpO2_B = 30.354;
+    const kSpO2_C = 94.845;
+
+    // Calculate SpO2 using the ratio
+    const spo2 = kSpO2_A * ratio * ratio + kSpO2_B * ratio + kSpO2_C;
+
+    // Log the calculated SpO2 value
+    console.log(`SpO2: ${spo2}`);
+
+    // Update the SpO2 state
+    setSpo2(spo2);
+  };
+
+  const resetSpO2 = () => {
+    // Reset the SpO2 state when the hand is removed
+    setSpo2(0);
+    statRed.current.reset();
+    statIR.current.reset();
+  };
+
   const calculateCalories = () => {
     const weight = 70; // Weight in kg
     const Stride_Length = 0.73; // Stride length in meters
@@ -152,9 +193,7 @@ const WebSocketComponent: React.FC = () => {
 
     const Calories_Burned =
       stepCount * (Stride_Length * 0.000473) * (WtPound / 100);
-    console.log(Calories_Burned);
-
-    return setCalories(Calories_Burned);
+    setCalories(Calories_Burned);
   };
 
   const notify = () => {
@@ -197,10 +236,45 @@ const WebSocketComponent: React.FC = () => {
       </div>
       <div>
         <h2>Average BPM: {beatAvg.toFixed(2)}</h2>
-        <h2>Burned Caloried: {calories.toFixed(3)}cal</h2>
+        <h2>Burned Calories: {calories.toFixed(3)}cal</h2>
+        <h2>SpO2: {spo2.toFixed(2)}%</h2> {/* Display SpO2 */}
       </div>
     </div>
   );
 };
+
+// MinMaxAvgStatistic Class
+class MinMaxAvgStatistic {
+  min_: number = NaN;
+  max_: number = NaN;
+  sum_: number = 0;
+  count_: number = 0;
+
+  process(value: number) {
+    this.sum_ += value;
+    this.count_++;
+    this.min_ = isNaN(this.min_) ? value : Math.min(this.min_, value);
+    this.max_ = isNaN(this.max_) ? value : Math.max(this.max_, value);
+  }
+
+  reset() {
+    this.min_ = NaN;
+    this.max_ = NaN;
+    this.sum_ = 0;
+    this.count_ = 0;
+  }
+
+  average() {
+    return this.count_ > 0 ? this.sum_ / this.count_ : NaN;
+  }
+
+  minimum() {
+    return this.min_;
+  }
+
+  maximum() {
+    return this.max_;
+  }
+}
 
 export default WebSocketComponent;

@@ -44,7 +44,7 @@ unsigned long lastStepTime = 0;           // Timestamp of last step detection
 
 void setup() {
   Serial.begin(115200);
-  wsServer.begin("9S", "88888899");
+  wsServer.begin("ESP", "00000000");
   Serial.println("MAX30105 Basic Readings Example");
   if (particleSensor.begin() == false) {
     Serial.println("MAX30105 was not found. Please check wiring/power. ");
@@ -119,46 +119,6 @@ float UV() {
   Serial.println();
   return uvIntensity;
 }
-
-
-
-// float getHeartRate() {
-//   float beatAvg = 0;
-//   long irValue;
-//   for (int i = 0; i < 100; i++) {
-//     irValue = particleSensor.getIR();
-//     if (1) {
-//       //We sensed a beat!
-//       long delta = millis() - lastBeat;
-//       lastBeat = millis();
-
-//       beatsPerMinute = 60 / (delta / 1000.0);
-
-//       if (beatsPerMinute < 255 && beatsPerMinute > 20) {
-//         rates[rateSpot++] = (byte)beatsPerMinute;  //Store this reading in the array
-//         rateSpot %= RATE_SIZE;                     //Wrap variable
-
-//         //Take average of readings
-//         for (byte x = 0; x < RATE_SIZE; x++)
-//           beatAvg += rates[x];
-//         beatAvg /= RATE_SIZE;
-//       }
-//     }
-//     Serial.print("IR=");
-//     Serial.print(irValue);
-//     Serial.print(", BPM=");
-//     Serial.print(beatsPerMinute);
-//     Serial.print(", Avg BPM=");
-//     Serial.print(beatAvg);
-//     Serial.println();
-//     if (irValue < 50000) {
-//       return -1;
-//     }
-//   }
-
-
-//   return beatAvg;
-// }
 
 
 void loop() {

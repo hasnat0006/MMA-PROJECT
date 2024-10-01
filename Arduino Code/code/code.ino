@@ -69,9 +69,15 @@ void gyro() {
   int z = analogRead(zpin);  // Read ZOUT
 
   // Convert raw readings into G-force values
+  // float G = (axis_value - calibration_value) / scale_factor * 9.8
   float Gx = ((float)x - 331.5) / 65 * 9.8;
   float Gy = ((float)y - 329.5) / 68.5 * 9.8;
   float Gz = ((float)z - 340) / 68 * 9.8;
+  
+  // from data sheet
+//   Sensitivity: 330 mV/g
+// ADC reference voltage: 3.3V
+// ADC resolution: 10 bits (1024 levels)
 
   // Current timestamp
   unsigned long currentTime = millis();
@@ -107,6 +113,10 @@ float UV() {
   int uvLevel = averageAnalogRead(UVOUT);
   int refLevel = averageAnalogRead(REF_3V3);
   float outputVoltage = 3.3 / refLevel * uvLevel;
+  // Convert the voltage to UV intensity (mW/cm^2)
+  // The formula for UV intensity is given in the datasheet
+  // The output voltage is in the range of 0.99V to 2.9V
+  // The UV intensity is in the range of 0.0 mW/cm^2 to 15.0 mW/cm^2
   float uvIntensity = mapfloat(outputVoltage, 0.99, 2.9, 0.0, 15.0);
 
   // Output data to Serial Monitor
@@ -127,7 +137,20 @@ void loop() {
 
   float temperature = particleSensor.readTemperature();
   char *temperatureData = (char *)malloc(60);                                           
-  if (temperatureData != NULL) {                                                                       
+  if (temperatureData != NULL) 
+  
+  // {
+  //   type : {
+  //     "tmp" : {
+  //       "data" : {
+  //         "T" : 0.0,
+  //         "U" : 0.0
+  //       }
+  //     }
+  //   }
+  // }
+  
+  {                                                                       
     sprintf(temperatureData, "{\"t\":\"tmp\",\"dt\":{\"T\":%f, \"U\":%f}}", temperature, uvIntensity); 
     wsServer.sendMsg(temperatureData);  // Send the message
 

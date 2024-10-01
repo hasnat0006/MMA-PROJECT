@@ -1,8 +1,9 @@
 "use client";
 import {
-  faHeart,
+  faHeartPulse,
   faPersonWalking,
   faSun,
+  faGaugeHigh,
   faTemperatureThreeQuarters,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -77,7 +78,12 @@ const WebSocketComponent: React.FC = () => {
         if (data.t === "tmp") {
           const tempF = (data.dt.T * 9) / 5 + 32;
           setTemp(tempF);
-          setUV(data.dt.U);
+          if (data.dt.u < 0) {
+            setUV(0.0);
+          } else {
+            setUV(data.dt.u);
+          }
+          console.log("UV: ", uv);
         }
 
         if (data.t === "s") {
@@ -123,22 +129,28 @@ const WebSocketComponent: React.FC = () => {
       return; // Return since we don't have a valid delta yet
     }
 
-    const delta = currentTime - lastBeat.current;
-    console.log(delta, MINIMUM_DELTA, MAXIMUM_DELTA); // Log delta and the limits for debugging
+    // Define a threshold for detecting a beat
+    const BEAT_THRESHOLD = 50000; // Example threshold value, adjust as needed
 
-    // Only process if delta is within valid range
-    if (delta > MINIMUM_DELTA && delta < MAXIMUM_DELTA) {
-      lastBeat.current = currentTime;
+    // Check if the IR value indicates a beat
+    if (irValue > BEAT_THRESHOLD) {
+      const delta = currentTime - lastBeat.current;
+      console.log(delta, MINIMUM_DELTA, MAXIMUM_DELTA); // Log delta and the limits for debugging
 
-      const bpm = 60 / (delta / 1000); // Calculate BPM
-      if (bpm < 180 && bpm > 40) {
-        rates.current[rateSpot.current] = bpm;
-        rateSpot.current = (rateSpot.current + 1) % rates.current.length;
+      // Only process if delta is within valid range
+      if (delta > MINIMUM_DELTA && delta < MAXIMUM_DELTA) {
+        lastBeat.current = currentTime;
 
-        const avgBPM =
-          rates.current.reduce((a, b) => a + b, 0) / rates.current.length;
-        setBeatsPerMinute(bpm); // Update only when a valid beat is found
-        setBeatAvg(avgBPM); // Update only when a valid beat is found
+        const bpm = 60 / (delta / 1000); // Calculate BPM
+        if (bpm < 180 && bpm > 40) {
+          rates.current[rateSpot.current] = bpm;
+          rateSpot.current = (rateSpot.current + 1) % rates.current.length;
+
+          const avgBPM =
+            rates.current.reduce((a, b) => a + b, 0) / rates.current.length;
+          setBeatsPerMinute(bpm); // Update only when a valid beat is found
+          setBeatAvg(avgBPM); // Update only when a valid beat is found
+        }
       }
     }
   };
@@ -214,7 +226,7 @@ const WebSocketComponent: React.FC = () => {
       <h1>Health Monitor Dashboard</h1>
       <div className="data">
         <div className="each-element">
-          <FontAwesomeIcon icon={faHeart} fade className="icon" />
+          <FontAwesomeIcon icon={faHeartPulse} fade className="icon" />
           <p>BPM: {beatsPerMinute.toFixed(2)}</p>
         </div>
         <div className="each-element">
@@ -231,13 +243,17 @@ const WebSocketComponent: React.FC = () => {
         </div>
         <div className="each-element">
           <FontAwesomeIcon icon={faSun} fade className="icon" />
-          <p>UV Index: {uv.toFixed(2)}</p>
+          {/* <p>UV Index: {uv}</p> */}
+          <p>UV Index: {uv < 0 ? 0 : uv}mW/cm²</p>
+        </div>
+        <div className="each-element">
+          <FontAwesomeIcon icon={faGaugeHigh} fade className="icon" />
+          <p>SpO2: {uv}%</p>
         </div>
       </div>
       <div>
         <h2>Average BPM: {beatAvg.toFixed(2)}</h2>
         <h2>Burned Calories: {calories.toFixed(3)}cal</h2>
-        <h2>SpO2: {spo2.toFixed(2)}%</h2> {/* Display SpO2 */}
       </div>
     </div>
   );

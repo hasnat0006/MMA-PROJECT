@@ -34,12 +34,12 @@ long lastBeat = 0;
 float beatsPerMinute;
 
 
-int stepCount = 0;                        // Step counter
-float prevZ = 0;                          // Previous Z-axis value for detecting peaks
-bool stepDetected = false;                // Flag to avoid double-counting steps
-const float stepThreshold = 3;            // G-force threshold for a step
-const unsigned long debounceDelay = 300;  // 300 ms debounce delay
-unsigned long lastStepTime = 0;           // Timestamp of last step detection
+int stepCount = 0;                       
+float prevZ = 0;                         
+bool stepDetected = false;               
+const float stepThreshold = 3;           
+const unsigned long debounceDelay = 300; 
+unsigned long lastStepTime = 0;      
 
 
 void setup() {
@@ -57,7 +57,7 @@ void setup() {
   pinMode(UVOUT, INPUT);
   pinMode(REF_3V3, INPUT);
   pinMode(EN_PIN, OUTPUT);
-  digitalWrite(EN_PIN, HIGH);  // Enable the UV sensor
+  digitalWrite(EN_PIN, HIGH);  
 
   Serial.println("MP8511 example with EN pin control on ESP32");
 }
@@ -75,9 +75,9 @@ void gyro() {
   float Gz = ((float)z - 340) / 68 * 9.8;
   
   // from data sheet
-//   Sensitivity: 330 mV/g
-// ADC reference voltage: 3.3V
-// ADC resolution: 10 bits (1024 levels)
+  //   Sensitivity: 330 mV/g
+  // ADC reference voltage: 3.3V
+  // ADC resolution: 10 bits (1024 levels)
 
   // Current timestamp
   unsigned long currentTime = millis();
@@ -168,34 +168,30 @@ void loop() {
             particleSensor.getIR(),
             particleSensor.getGreen());
 
-    wsServer.sendMsg(msg);  // Send the message
-    free(msg);              // Free the memory after sending the message
+    wsServer.sendMsg(msg);  
+    free(msg);             
   } else {
     Serial.println("Memory allocation failed");
   }
   delay(200);
 
 
-  char *msg1 = (char *)malloc(40);                                // Allocate memory for the message
-  if (msg1 != NULL) {                                             // Check if memory allocation was successful
-    sprintf(msg1, "{\"t\":\"s\",\"dt\":{\"s\":%d}}", stepCount);  // Format the message
-
-    wsServer.sendMsg(msg1);  // Send the message
-
-    free(msg1);  // Free the allocated memory after the message is sent
-  } else {
+  char *msg1 = (char *)malloc(40);                              
+  if (msg1 != NULL) {                                           
+    sprintf(msg1, "{\"t\":\"s\",\"dt\":{\"s\":%d}}", stepCount); 
+    wsServer.sendMsg(msg1); 
+    free(msg1);  
+  } 
+  else {
     Serial.println("Memory allocation failed");
   }
   delay(200);
 }
 
-
-// Function to take an average of analog readings on a given pin
 int averageAnalogRead(int pinToRead) {
   byte numberOfReadings = 8;
   unsigned int runningValue = 0;
 
-  // Take multiple readings and sum them
   for (int x = 0; x < numberOfReadings; x++) {
     runningValue += analogRead(pinToRead);
   }
@@ -204,7 +200,6 @@ int averageAnalogRead(int pinToRead) {
   return runningValue;
 }
 
-// Map function for floats
 float mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

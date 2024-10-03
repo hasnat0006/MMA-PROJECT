@@ -78,11 +78,7 @@ const WebSocketComponent: React.FC = () => {
         if (data.t === "tmp") {
           const tempF = (data.dt.T * 9) / 5 + 32;
           setTemp(tempF);
-          if (data.dt.u < 0) {
-            setUV(0.0);
-          } else {
-            setUV(data.dt.u);
-          }
+          setUV(data.dt.U);
           console.log("UV: ", uv);
         }
 
@@ -244,11 +240,11 @@ const WebSocketComponent: React.FC = () => {
         <div className="each-element">
           <FontAwesomeIcon icon={faSun} fade className="icon" />
           {/* <p>UV Index: {uv}</p> */}
-          <p>UV Index: {uv < 0 ? 0 : uv}mW/cm²</p>
+          <p>UV Id: {uv.toFixed(2)}</p>
         </div>
         <div className="each-element">
           <FontAwesomeIcon icon={faGaugeHigh} fade className="icon" />
-          <p>SpO2: {uv}%</p>
+          <p>SpO2: {spo2.toFixed(2)}%</p>
         </div>
       </div>
       <div>

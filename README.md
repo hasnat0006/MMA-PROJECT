@@ -2,8 +2,10 @@
 
 <p id="description">The Patient Health Monitoring System is a real-time solution designed to monitor vital signs like heart rate oxygen levels body temperature UV exposure and step count. The data is displayed on a dedicated website. Healthcare professionals can remotely monitor patients’ vitals making it a cost-effective and practical solution for remote health management.</p>
 
-<img src = 'Image1.jpg' height = 343px>
-<img src = 'Image2.jpg' height = 344px>
+<p align="center">
+  <img src="Image1.jpg" height="343px">
+  <img src="Image2.jpg" height="344px">
+</p>
 <img src = 'dashboard.png'>
 
 <h2>🧐 Features</h2>
